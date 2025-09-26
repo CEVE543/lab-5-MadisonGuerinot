@@ -41,49 +41,26 @@ code-line-numbers: false
 code-block-font-size: "0.85em"
 ---
 
-## Do Before Lab {.unnumbered}
-
-1. **Accept the assignment.** Use the GitHub Classroom link posted on Canvas to "accept" the assignment, which will give you your own GitHub repository.
-2. **Clone your repository** to your computer using GitHub Desktop or the command line.
-3. **Open the repository in VS Code** directly from VS Code, GitHub Desktop, or your command line.
-4. **Activate the Julia environment.** In VS Code, open the command palette (View → Command Palette) and type "Julia: Start REPL". Alternatively, run `julia --project=.` in the terminal, then run `using Pkg; Pkg.instantiate()` to install required packages. The easiest method is to type `]` in the REPL to enter package mode, then type `instantiate`.
-5. **Review previous concepts** including Bayesian GEV inference, return level calculations, and multi-station comparisons.
-6. **Verify rendering works.** Run `quarto render index.qmd` in your terminal - it should create both PDF and HTML documents.
-
-## Do During Lab {.unnumbered}
-
-This lab explores why regional analysis is essential for reliable extreme value analysis:
-
-1. Individual station trend tests give inconsistent, implausible results
-2. Single-station nonstationary models have excessive uncertainty
-3. Regional models that share some parameters across stations can reduce uncertainty
-4. Comparing approaches reveals bias-variance trade-offs in parameter estimation
-
-As with previous labs, you do not need to write code from scratch -- focus on understanding the regional analysis workflow, interpreting results, and connecting to PS1.
-
-To submit your work, push your changes to GitHub, render to PDF, and upload the PDF to Canvas.
-
-## Your Analysis {.unnumbered}
-
-::: {.callout-important}
-## Instructions
-Delete this entire section (including the "Do Before Lab" and "Do During Lab" sections above) and replace it with your analysis responses. Use the numbered format below for your final submission.
-:::
-
 **Response 1: Spatial Trend Inconsistencies**
-*What patterns do you observe in the Mann-Kendall results across nearby stations? Are these results climatologically plausible? What does this suggest about single-station trend analysis?*
+*What patterns do you observe in the Mann-Kendall results across nearby stations? Are these results climatologically plausible? What does this suggest about single-station trend analysis?* The results vary across stations. Stations that are almost on top of eachother are very similar for S Statistics and p-values. But there is high variation when increasing the distance. This cannot be explained by changing climatology, but is likely due to randomness of which specific areas where hit with thunderstorms. A single-station trend analysis may be heavily dominated by the randomness of the data instead of picking up on actual regiona changes in climate.
 
 **Response 2: Nonstationary Model Uncertainty**
-*How does posterior uncertainty in return levels compare across the two nonstationary GEV models? Which model structure provides the most reliable estimates and why?*
+*How does posterior uncertainty in return levels compare across the two nonstationary GEV models? Which model structure provides the most reliable estimates and why?* The two models are very similar. This suggests that allowing the scale parameter to vary with CO2 does not significantly change the projected return level. There is more variation in the 100-year RL for the Location + Scale model. Therefore, it may be preferable to use the Location only model to create more reliable estimates. It makes intuitive sense that varying only one parameter would generate more consistent estimates. 
 
 **Response 3: Regional vs Single-Station Trade-offs**
-*Compare the bias-variance trade-offs between single-station and regional parameter estimation approaches. Under what conditions would you choose each strategy?*
+*Compare the bias-variance trade-offs between single-station and regional parameter estimation approaches. Under what conditions would you choose each strategy?*  
+
+When analyzing a single-station, the model can fit very closely to the data resulting in low-bias. However, it will also fit the noise resulting in high variance. Conversely, regional analysis will limit the impact of the noise, low variance, but may be biased by other stations. This is especially true if the stations are not climatologically similar for some reason, for example a mountain range. The single-station method is probably best where the station has a long history of data and the other regional stations are not likely to have similar climatology or have many errors (ie faulty during hurricanes). The regional analysis is better if there are multiple stations with similar climatology but short-datasets. It can also capture regional changes better. 
 
 **Response 4: Parameter Sharing Effects**
 *How does regional parameter sharing affect trend estimates and uncertainty? What are the practical implications for stations with limited data?*
 
+The return levels remain about the same using single-station v.regional parameter estimates. The uncertainty n the predictions is reduced throughout the return period. This allows us to be more confident estimating return levels when there is limited data at a particular station. 
+
 **Response 5: Regional Analysis for PS1**
-*How will these regional analysis techniques enhance your PS1 approach? What challenges do you anticipate in implementing regional models for your selected stations?*
+
+I will use th s analysis to complete Task 4. The techniques will help me analyze the return levels of rainfall at the Galveston sation and leverage other stations to reduce the noise and uncertainty in the estimates. I anticipate challenges in ensuring that the stations selected reflect the climatology of the Galveston region. Further inland may have different weather patterns than strictly along the coast. 
+
 
 ## Data Setup and Package Loading
 
@@ -167,7 +144,7 @@ end
 Select your primary station that has substantial data and potential trend signal:
 
 ```{julia}
-my_stnid = 31  # Station 41-4309 (Houston Addicks), selected for potential trend signal
+my_stnid = 779  # Station 41-4309 (Houston Addicks), selected for potential trend signal
 my_station = @chain stations begin
 	@filter(stnid == !!my_stnid)
 	first
@@ -762,7 +739,7 @@ Let's compare how the regional model performs versus the single-station nonstati
 regional_fname = joinpath(lab_dir, "regional_nonstat.nc")
 regional_idata = ArviZ.from_netcdf(regional_fname)
 
-my_stnid = 31
+my_stnid = 779
 analysis_stnids = analysis_stations.stnid
 
 my_station_idx = findfirst(x -> x == my_stnid, analysis_stnids)
